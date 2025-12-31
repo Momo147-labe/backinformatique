@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 
 
 // 🔗 URL Render du backend
-const BACKEND_URL = "https://magasinlicence.onrender.com";
+const BACKEND_URL = "https://backinformatique.onrender.com";
 
 // 🔁 Fonction de ping
 function pingServer() {
