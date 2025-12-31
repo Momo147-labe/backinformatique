@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const path = require("path");
 const { readJSON, writeJSON, imageToBase64 } = require("../utils/file.utils");
+const multer = require("multer");
 
 const router = express.Router();
 const filePath = path.join(__dirname, "../data/users.json");
@@ -12,13 +13,31 @@ function generateUserId(role, nom, prenom) {
   return `${clean(role)}_${clean(nom)}_${clean(prenom)}`;
 }
 
+
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 2MB MAX
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Fichier non autorisé"), false);
+    }
+  },
+});
+
+
 // --------------------
 // INSCRIPTION
 // --------------------
-router.post("/register", async (req, res) => {
+router.post("/register", upload.single("profil"),async (req, res) => {
   try {
     const data = readJSON(filePath);
-    const { nom, prenom, username, password, role, profilPath, INE } = req.body;
+    const { nom, prenom, username, password, role, INE } = req.body;
 
     if (!nom || !prenom || !username || !password || !role) {
       return res.status(400).json({ error: "Nom, prenom, username, password et role requis" });
@@ -30,10 +49,14 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const id = generateUserId(role, nom, prenom);
-    const profil = profilPath ? imageToBase64(profilPath) : "";
+      // 🔥 IMAGE → BASE64
+    let profil = "";
+    if (req.file) {
+      profil = req.file.buffer.toString("base64");
+    }
 
     const newUser = {
-      id, nom, prenom, username, password: hashedPassword, role, profilPath, INE: INE || "",
+      id, nom, prenom, username, password: hashedPassword, role, profil, INE: INE || "",
       contact: [], competence: [], specialite: [], projets: []
     };
 
