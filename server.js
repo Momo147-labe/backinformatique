@@ -17,6 +17,17 @@ const expensesRouter = require("./routes/expenses.routes");
 const incomesRouter = require("./routes/incomes.routes");
 const eventsRouter = require("./routes/events.routes");
 
+// --------------------
+// Logger des requêtes
+// --------------------
+app.use((req, res, next) => {
+  console.log(`\n[REQ] ${req.method} ${req.url}`);
+  if (Object.keys(req.body).length > 0) {
+    console.log("[BODY]", req.body);
+  }
+  next();
+});
+
 // Routes
 app.use("/users", usersRouter);
 app.use("/students", studentsRouter);
