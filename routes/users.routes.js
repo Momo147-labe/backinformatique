@@ -1,26 +1,23 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const path = require("path");
-const { readJSON, writeJSON, imageToBase64 } = require("../utils/file.utils");
 const multer = require("multer");
+const { readJSON, writeJSON } = require("../utils/file.utils");
 
 const router = express.Router();
 const filePath = path.join(__dirname, "../data/users.json");
 
-// Générer ID à partir du role, nom et prenom
+// Générer ID à partir du rôle, nom et prénom
 function generateUserId(role, nom, prenom) {
-  const clean = str => str.toLowerCase().replace(/\s+/g, '');
+  const clean = (str) => str.toLowerCase().replace(/\s+/g, '');
   return `${clean(role)}_${clean(nom)}_${clean(prenom)}`;
 }
 
-
+// Multer : stockage en mémoire pour convertir en base64
 const storage = multer.memoryStorage();
-
 const upload = multer({
   storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 2MB MAX
-  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // max 5MB
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
       cb(null, true);
@@ -30,18 +27,21 @@ const upload = multer({
   },
 });
 
-
 // --------------------
 // INSCRIPTION
 // --------------------
-router.post("/register", upload.single("profil"),async (req, res) => {
+router.post("/register", upload.single("profil"), async (req, res) => {
   try {
-    const data = readJSON(filePath);
+    console.log("req.body:", req.body); // Debug
+    console.log("req.file:", req.file); // Debug
+
     const { nom, prenom, username, password, role, INE } = req.body;
 
     if (!nom || !prenom || !username || !password || !role) {
       return res.status(400).json({ error: "Nom, prenom, username, password et role requis" });
     }
+
+    const data = readJSON(filePath);
 
     if (data.find(u => u.username === username)) {
       return res.status(400).json({ error: "Username déjà utilisé" });
@@ -49,21 +49,34 @@ router.post("/register", upload.single("profil"),async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const id = generateUserId(role, nom, prenom);
-      // 🔥 IMAGE → BASE64
+
+    // 🔥 Conversion image en Base64
     let profil = "";
     if (req.file) {
       profil = req.file.buffer.toString("base64");
     }
 
     const newUser = {
-      id, nom, prenom, username, password: hashedPassword, role, profil, INE: INE || "",
-      contact: [], competence: [], specialite: [], projets: []
+      id,
+      nom,
+      prenom,
+      username,
+      password: hashedPassword,
+      role,
+      INE: INE || "",
+      profil,
+      contact: [],
+      competence: [],
+      specialite: [],
+      projets: [],
     };
 
     data.push(newUser);
     writeJSON(filePath, data);
-    res.status(201).json(newUser);
+
+    res.status(201).json({ success: true, user: newUser });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
