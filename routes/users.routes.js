@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
     const profil = profilPath ? imageToBase64(profilPath) : "";
 
     const newUser = {
-      id, nom, prenom, username, password: hashedPassword, role, profil, INE: INE || "",
+      id, nom, prenom, username, password: hashedPassword, role, profilPath, INE: INE || "",
       contact: [], competence: [], specialite: [], projets: []
     };
 

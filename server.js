@@ -30,6 +30,10 @@ app.get("/", (req, res) => {
   res.send("Backend du département Informatique fonctionne !");
 });
 
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: "Erreur serveur" });
+});
 
 // 🔗 URL Render du backend
 const BACKEND_URL = "https://backinformatique.onrender.com";
