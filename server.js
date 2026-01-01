@@ -3,12 +3,6 @@ const https = require("https");
 const cors = require("cors");
 const app = express();
 const PORT = 5000;
-
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
 // Import des routes
 const usersRouter = require("./routes/users.routes");
 const studentsRouter = require("./routes/students.routes");
@@ -17,7 +11,17 @@ const expensesRouter = require("./routes/expenses.routes");
 const incomesRouter = require("./routes/incomes.routes");
 const eventsRouter = require("./routes/events.routes");
 
+
+app.use("/users", usersRouter);
+
+// Middleware
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+
 // --------------------
+
 // Logger des requêtes
 // --------------------
 app.use((req, res, next) => {
@@ -29,7 +33,6 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use("/users", usersRouter);
 app.use("/students", studentsRouter);
 app.use("/budget", budgetRouter);
 app.use("/expenses", expensesRouter);
